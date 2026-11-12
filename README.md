@@ -117,5 +117,3 @@ GitHub Actions runs these checks on pushes and pull requests. Archived files in 
 The reference adsorption framework, parameters and Figure 2 protocol come from:
 
 An, K., Wald, D., Chen, K. & King, R. (2026). *Cycle-resolved dynamic modeling of atmospheric CO2 separation systems under time-varying ambient and electricity conditions*. Frontiers in Environmental Engineering 5:1881554. https://doi.org/10.3389/fenve.2026.1881554
-
-The Python translation and subsequent thermal/optimisation work are described separately above. Upstream MATLAB files and archived originals have been left intact. No new licence is assigned to third-party material by this cleanup.
