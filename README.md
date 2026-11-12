@@ -1,8 +1,10 @@
-# Direct air capture: thermal modelling and cycle optimisation
+# Direct Air Capture | Reduced-Order TVSA Modelling and Thermal Optimisation
 
-A Python model of a temperature-vacuum swing adsorption (TVSA) process for capturing CO2 from air. The project examines how regeneration temperature, desorption time and ambient conditions affect capture productivity and heater energy consumption.
+This project investigates the performance and energy requirements of a temperature-vacuum swing adsorption (TVSA) process for direct air capture (DAC) using Python-based process simulation.
 
-The work has two parts: a Python reproduction of a published MATLAB model, followed by a thermal extension with equipment limits and constrained optimisation. The baseline provides a numerical reference; the extension explores operating trade-offs.
+The work began with reproducing a published reduced-order TVSA model in Python and comparing its outputs against MATLAB reference data. The model was subsequently extended to incorporate transient bed energy balances, adsorption heat effects, and heating/cooling equipment constraints. Constrained numerical optimisation was then performed to investigate the trade-off between regeneration energy consumption and CO₂ capture productivity.
+
+**Key result:** A SciPy COBYLA optimisation identified operating conditions that reduced simulated heater-specific energy consumption by **2.31% (1.9951 → 1.9490 kWh_th/kg CO₂)** while maintaining at least 90% of baseline CO₂ productivity at a 1-second simulation timestep. This improvement comes with approximately a 10% reduction in productivity and is subject to the model's thermal assumptions.
 
 ## Engineering work
 
@@ -98,6 +100,8 @@ Heater SEC excludes fan and vacuum electricity and cooling utility energy. It ca
 - `outputs/figures/`: example baseline comparison figure.
 - `outputs/data/summary_metrics.csv`: compact baseline results. Large regenerated time-series CSVs are ignored by Git.
 - Root sensitivity CSVs: recorded study outputs; rerunning a sweep overwrites the corresponding file.
+- `reference_matlab/`: upstream MATLAB source.
+- `student_original/`: archived early Python parameter and isotherm files, retained for provenance.
 
 ## Development checks
 
@@ -108,9 +112,12 @@ Heater SEC excludes fan and vacuum electricity and cooling utility energy. It ca
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
+GitHub Actions runs these checks on pushes and pull requests. Archived files in `student_original/` are excluded from formatting and linting.
 
 ## Attribution
 
 The reference adsorption framework, parameters and Figure 2 protocol come from:
 
 An, K., Wald, D., Chen, K. & King, R. (2026). *Cycle-resolved dynamic modeling of atmospheric CO2 separation systems under time-varying ambient and electricity conditions*. Frontiers in Environmental Engineering 5:1881554. https://doi.org/10.3389/fenve.2026.1881554
+
+The Python translation and subsequent thermal/optimisation work are described separately above. Upstream MATLAB files and archived originals have been left intact. No new licence is assigned to third-party material by this cleanup.
