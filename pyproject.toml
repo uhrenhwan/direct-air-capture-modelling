@@ -1,0 +1,16 @@
+[tool.black]
+target-version = ["py310"]
+extend-exclude = "student_original"
+
+[tool.ruff]
+target-version = "py310"
+extend-exclude = ["student_original"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+ignore = ["E741"]  # Short scientific symbols occur in the translated equations.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
