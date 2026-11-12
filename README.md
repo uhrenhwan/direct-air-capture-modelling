@@ -98,8 +98,6 @@ Heater SEC excludes fan and vacuum electricity and cooling utility energy. It ca
 - `outputs/figures/`: example baseline comparison figure.
 - `outputs/data/summary_metrics.csv`: compact baseline results. Large regenerated time-series CSVs are ignored by Git.
 - Root sensitivity CSVs: recorded study outputs; rerunning a sweep overwrites the corresponding file.
-- `reference_matlab/`: upstream MATLAB source.
-- `student_original/`: archived early Python parameter and isotherm files, retained for provenance.
 
 ## Development checks
 
@@ -110,12 +108,9 @@ Heater SEC excludes fan and vacuum electricity and cooling utility energy. It ca
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-GitHub Actions runs these checks on pushes and pull requests. Archived files in `student_original/` are excluded from formatting and linting.
 
 ## Attribution
 
 The reference adsorption framework, parameters and Figure 2 protocol come from:
 
 An, K., Wald, D., Chen, K. & King, R. (2026). *Cycle-resolved dynamic modeling of atmospheric CO2 separation systems under time-varying ambient and electricity conditions*. Frontiers in Environmental Engineering 5:1881554. https://doi.org/10.3389/fenve.2026.1881554
-
-The Python translation and subsequent thermal/optimisation work are described separately above. Upstream MATLAB files and archived originals have been left intact. No new licence is assigned to third-party material by this cleanup.
