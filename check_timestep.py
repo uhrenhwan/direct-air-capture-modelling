@@ -5,8 +5,8 @@ from optimisation import evaluate
 
 def main():
     # Baseline and best SciPy solution
-    T_opt = 94.84
-    t_opt = 23066.14
+    T_opt = 95.00
+    t_opt = 23076.65
 
     for dt in [5.0, 1.0]:
         baseline = evaluate(100, 20000, dt)
