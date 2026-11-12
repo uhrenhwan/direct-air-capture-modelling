@@ -98,8 +98,6 @@ Heater SEC excludes fan and vacuum electricity and cooling utility energy. It ca
 - `outputs/figures/`: example baseline comparison figure.
 - `outputs/data/summary_metrics.csv`: compact baseline results. Large regenerated time-series CSVs are ignored by Git.
 - Root sensitivity CSVs: recorded study outputs; rerunning a sweep overwrites the corresponding file.
-- `reference_matlab/`: upstream MATLAB source.
-- `student_original/`: archived early Python parameter and isotherm files, retained for provenance.
 
 ## Development checks
 
@@ -110,7 +108,6 @@ Heater SEC excludes fan and vacuum electricity and cooling utility energy. It ca
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-GitHub Actions runs these checks on pushes and pull requests. Archived files in `student_original/` are excluded from formatting and linting.
 
 ## Attribution
 
