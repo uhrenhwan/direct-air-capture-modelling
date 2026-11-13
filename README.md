@@ -199,9 +199,6 @@ These checks evaluate numerical consistency, not experimental accuracy.
 - The optimisation is a local constrained search; global optimality is not guaranteed.
 - Dependency minimum versions are specified in `requirements.txt`, but an exact environment lockfile has not yet been established.
 
-```
-
-
 
 ## Modelling Methodology
 
