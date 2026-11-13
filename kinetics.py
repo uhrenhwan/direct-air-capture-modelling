@@ -1,4 +1,8 @@
-"""LDF rates and two-pool equilibrium fractions, MATLAB core lines 2062-2166, 2221-2282."""
+"""Temperature-dependent LDF rates and empirical residual loading floors.
+
+The stage multipliers, moisture gate and residual rules follow the reference
+MATLAB model; they are retained in both Python simulators.
+"""
 
 from math import exp
 
@@ -10,6 +14,7 @@ def clamp(x, lo, hi):
 
 
 def pool_fraction(activity, stage, p):
+    """Return the slow/bound equilibrium share for adsorption or regeneration."""
     a = "ads" if stage == 6 else "regen"
     return clamp(
         p["f0_" + a] + p["k_aw_" + ("ads" if stage == 6 else "reg")] * activity,
@@ -19,6 +24,7 @@ def pool_fraction(activity, stage, p):
 
 
 def rates(T, stage, p_co2, aw_eff, kin, design):
+    """Return CO2 and water LDF coefficients [1/s] for T [K] and p_co2 [Pa]."""
     kc = kin["kCO2_ref"] * exp(-kin["Ea_CO2"] / R * (1 / T - 1 / kin["Tref"]))
     kh = kin["kH2O_ref"] * exp(-kin["Ea_H2O"] / R * (1 / T - 1 / kin["Tref"]))
     kc *= kin["mCO2"][stage - 1]
@@ -33,13 +39,14 @@ def rates(T, stage, p_co2, aw_eff, kin, design):
                 (gate["aw_hi"] - aw_eff) / (gate["aw_hi"] - gate["aw_lo"]), 0.0, 1.0
             )
             kc *= 1 + (gate["fmax"] - 1) * u ** gate["power"]
-    # MATLAB caps inside kinetics_LDF first, THEN multiplies sqrt(A_mult) again.
+    # Preserve the reference order: cap rates before applying the area scaling.
     kc = clamp(kc, 1e-8, 0.05) * (design["A_mult"] ** 0.5)
     kh = clamp(kh, 1e-8, 0.10) * (design["A_mult"] ** 0.5)
     return kc, kh
 
 
 def co2_slow_residual(q_slow, q_ads_peak, T, aw, stage, p):
+    """Apply the empirical CO2 slow-pool floor during configured stages."""
     if stage not in p["apply_in_stage_ids"]:
         return q_slow
     frac = clamp(
@@ -54,6 +61,7 @@ def co2_slow_residual(q_slow, q_ads_peak, T, aw, stage, p):
 
 
 def h2o_bound_residual(q_bound, q_peak, T, ctrl, stage, p):
+    """Apply the bound-water floor using temperature and regeneration duration."""
     if stage not in p["apply_in_stage_ids"]:
         return q_bound
     t_reg = ctrl["time_heat_s"] + ctrl["time_des_s"]

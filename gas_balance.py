@@ -1,5 +1,3 @@
-"""Gas pressure/flow closure, core MATLAB lines 1782-1938, 2033-2057."""
-
 from isotherms import h2o_equilibrium, psat_h2o
 
 

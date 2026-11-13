@@ -15,11 +15,26 @@ The work began with reproducing a published reduced-order TVSA model in Python a
 - Used SciPy COBYLA to minimise heater specific energy consumption (SEC), subject to at least 90% of baseline CO2 productivity.
 - Investigated ambient conditions, operating conditions and time-step sensitivity.
 
-## Reported result
 
-The recorded optimisation study found a candidate near **95 C regeneration temperature and 23,077 s desorption time**, compared with a 100 C / 20,000 s baseline. Reported heater SEC fell from **1.995 to 1.949 kWh thermal/kg CO2**, a **2.31% reduction**, while productivity fell from **6.354 to 5.718 kg CO2/h**, close to the imposed minimum.
+## Optimisation Results
 
-These are previously recorded simulation results, not a guarantee for every parameter revision or solver version. The optimisation uses a 1 s time step; the general evaluator defaults to 5 s. Re-run the study before using the figures as current results. See [results and interpretation](project_result.md).
+Constrained optimisation was performed using SciPy COBYLA to minimise heater-specific energy consumption (SEC), subject to maintaining at least 90% of baseline CO₂ productivity.
+
+| Parameter | Baseline | Optimised |
+|---|---:|---:|
+| Regeneration temperature | 100°C | 95°C |
+| Desorption duration | 20,000 s | 23,076.65 s |
+| Heater SEC | 1.9951 kWh_th/kg CO₂ | 1.9490 kWh_th/kg CO₂ |
+| CO₂ productivity | 6.3535 kg/h | 5.7183 kg/h |
+
+**Key finding:** The optimised operating conditions achieved a **2.31% reduction in simulated heater SEC**, while satisfying the minimum productivity constraint at the reported precision.
+
+The results were reproduced using `run_scipy.py` and `check_timestep.py` with a 1-second simulation timestep.
+
+**Limitations:** The solution is a local optimum under simplified thermal assumptions. Productivity is very close to the constraint boundary, numerical timestep convergence has not been demonstrated, and the reported SEC excludes vacuum, fan and cooling utility energy.
+
+Further discussion is provided in [Results and Interpretation](project_result.md).
+
 
 ## Run the project
 
@@ -58,11 +73,27 @@ print(f"Productivity: {metrics['productivity']:.3f} kg CO2/h")
 print(f"Heater SEC: {metrics['SEC']:.3f} kWh thermal/kg CO2")
 ```
 
+## Generate the figures
+
+All plotting scripts save PNGs under `outputs/figures/` and open a Matplotlib window. Run them with the same Python executable used above.
+
+| Script | Figure and required inputs |
+| --- | --- |
+| `plot_cycle_temperature.py` | One thermal cycle: bed temperature, reference command and equipment duties |
+| `plot_model_validation.py` | MATLAB/Python baseline overlay and error metrics; run `run_baseline.py` first |
+| `plot_optimisation.py` | Re-evaluate the baseline and recorded candidate at a 1 s time step; compare heater SEC |
+| `plot_sensitivities.py` | Run four one-variable sweeps at 1 s; save curves and a results CSV |
+| `plot_tradeoff.py` | Evaluate a small operating grid at 1 s; plot SEC against productivity and save a CSV |
+
+The optimisation plots evaluate a fixed candidate; they do not run the optimiser. The sensitivity and trade-off plots perform repeated simulations and take longer to generate.
+
 ## How the model works
 
 Each cycle runs through vacuum, heating, desorption, cooling, pressurisation and adsorption. Pressure and humidity follow prescribed stage profiles. CO2 and water equilibria determine target loadings, and linear driving force kinetics describe the approach to equilibrium. Gas inventory and flow balances update the CO2 mole fraction.
 
 The six states are fast/slow CO2 loading, free/bound water loading, gas CO2 mole fraction and bed temperature. Loadings are in mol/kg sorbent and temperature is in K internally.
+
+To follow the code, start with `run_cyclic_thermal.py`, then `optimisation.evaluate()`. The stage commands are in `cycle_driver.py`; the state updates and heat balance are in `simulator_thermal.py` and `thermal.py`.
 
 The two simulators share the reference adsorption and gas-balance equations:
 
@@ -101,7 +132,6 @@ Heater SEC excludes fan and vacuum electricity and cooling utility energy. It ca
 - `outputs/data/summary_metrics.csv`: compact baseline results. Large regenerated time-series CSVs are ignored by Git.
 - Root sensitivity CSVs: recorded study outputs; rerunning a sweep overwrites the corresponding file.
 - `reference_matlab/`: upstream MATLAB source.
-- `student_original/`: archived early Python parameter and isotherm files, retained for provenance.
 
 ## Development checks
 
@@ -112,7 +142,7 @@ Heater SEC excludes fan and vacuum electricity and cooling utility energy. It ca
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-GitHub Actions runs these checks on pushes and pull requests. Archived files in `student_original/` are excluded from formatting and linting.
+GitHub Actions runs these checks on pushes and pull requests.
 
 ## Attribution
 
@@ -120,4 +150,4 @@ The reference adsorption framework, parameters and Figure 2 protocol come from:
 
 An, K., Wald, D., Chen, K. & King, R. (2026). *Cycle-resolved dynamic modeling of atmospheric CO2 separation systems under time-varying ambient and electricity conditions*. Frontiers in Environmental Engineering 5:1881554. https://doi.org/10.3389/fenve.2026.1881554
 
-The Python translation and subsequent thermal/optimisation work are described separately above. Upstream MATLAB files and archived originals have been left intact. No new licence is assigned to third-party material by this cleanup.
+The Python translation and subsequent thermal/optimisation work are described separately above. The upstream MATLAB files retain their original content and attribution. Their redistribution remains subject to the upstream licence or permission.

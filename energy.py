@@ -1,9 +1,3 @@
-"""Figure 2 enabled energy accounting from MATLAB lines 2312-2671.
-
-No optional correction layers enabled in the Figure 2 script. The only
-active dry-condition adjustment is vacuum aw penalty.
-"""
-
 from math import log
 
 import numpy as np
