@@ -165,4 +165,3 @@ The reference adsorption framework, parameters and baseline protocol are attribu
 
 An, K., Wald, D., Chen, K. & King, R. (2026). *Cycle-resolved dynamic modeling of atmospheric CO2 separation systems under time-varying ambient and electricity conditions*. **Frontiers in Environmental Engineering**, 5, 1881554. https://doi.org/10.3389/fenve.2026.1881554
 
-The Python reproduction is distinguished from the subsequent thermal modelling and optimisation work. The `validation_reference/` directory contains reference CSVs used for numerical comparison. Any third-party source code or data should only be redistributed where the applicable licence or permission allows it.
