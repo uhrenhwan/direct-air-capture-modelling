@@ -1,399 +1,168 @@
 # Direct Air Capture | Reduced-Order TVSA Modelling and Thermal Optimisation
 
-This project investigates the performance and energy requirements of a temperature-vacuum swing adsorption (TVSA) process for direct air capture (DAC) using Python-based process simulation.
+A Python modelling project investigating the performance of a temperature-vacuum swing adsorption (TVSA) process for direct air capture (DAC). The work combines a reproduction of a published reduced-order adsorption model with a dynamic thermal extension, operating-condition sensitivity studies, and constrained process optimisation.
 
-The work began with reproducing a published reduced-order TVSA model in Python and comparing its outputs against MATLAB reference data. The model was subsequently extended to incorporate transient bed energy balances, adsorption heat effects, and heating/cooling equipment constraints. Constrained numerical optimisation was then performed to investigate the trade-off between regeneration energy consumption and CO₂ capture productivity.
+**Key result:** At a 1-second simulation timestep, the selected operating point reduced **simulated heater-specific energy consumption (SEC) by 2.31%**, from **1.9951 to 1.9490 kWh_th/kg CO₂**, while maintaining approximately 90% of baseline CO₂ productivity. This is a model-based heater-energy result—not a measured reduction in total plant energy use.
 
-**Key result:** A SciPy COBYLA optimisation identified operating conditions that reduced simulated heater-specific energy consumption by **2.31% (1.9951 → 1.9490 kWh_th/kg CO₂)** while maintaining at least 90% of baseline CO₂ productivity at a 1-second simulation timestep. This improvement comes with approximately a 10% reduction in productivity and is subject to the model's thermal assumptions.
+## Engineering contributions
 
-## Engineering work
+- **Reference-model reproduction:** Implemented the published six-stage reduced-order TVSA framework in Python and compared its outputs with stored MATLAB reference data.
+- **Dynamic thermal extension:** Replaced the prescribed bed-temperature response with a lumped energy balance incorporating CO₂/H₂O sorption heat, gas-flow sensible heat, and capacity-limited heating/cooling with hysteresis control.
+- **Process analysis and optimisation:** Evaluated repeated-cycle performance, performed operating and ambient sensitivity studies, and used SciPy COBYLA to investigate regeneration-temperature and desorption-time trade-offs under a minimum-productivity constraint.
 
-- Reproduced the six-stage adsorption cycle and compared the Python baseline with independent MATLAB exports.
-- Replaced the prescribed temperature response with a lumped bed energy balance, including CO2/water sorption heat and gas-flow sensible heat.
-- Added capacity-limited heating and cooling with on/off hysteresis control.
-- Carried the bed state between cycles and evaluated fifth-cycle performance.
-- Used SciPy COBYLA to minimise heater specific energy consumption (SEC), subject to at least 90% of baseline CO2 productivity.
-- Investigated ambient conditions, operating conditions and time-step sensitivity.
+## Key results
 
+The optimisation was carried out at **20°C ambient temperature and 50% relative humidity**, using a 1-second timestep and the fifth of five simulated thermal cycles for performance evaluation.
 
-## Optimisation Results
-
-Constrained optimisation was performed using SciPy COBYLA to minimise heater-specific energy consumption (SEC), subject to maintaining at least 90% of baseline CO₂ productivity.
-
-| Parameter | Baseline | Optimised |
+| Metric | Baseline | Selected operating point |
 |---|---:|---:|
 | Regeneration temperature | 100°C | 95°C |
 | Desorption duration | 20,000 s | 23,076.65 s |
 | Heater SEC | 1.9951 kWh_th/kg CO₂ | 1.9490 kWh_th/kg CO₂ |
 | CO₂ productivity | 6.3535 kg/h | 5.7183 kg/h |
 
+The selected point satisfies the **90% baseline-productivity threshold at the reported precision**, but the margin is very small. It achieves lower heater SEC at the cost of approximately 10% lower CO₂ productivity. The search identifies a **local candidate**, not a proven global optimum.
 
-### Energy–Productivity Trade-off
+### Energy–productivity trade-off
 
-![TVSA energy-productivity trade-off](outputs/figures/sec_productivity_tradeoff.png)
+![Simulated heater SEC versus CO2 productivity for selected TVSA operating conditions](outputs/figures/sec_productivity_tradeoff.png)
 
-The figure illustrates how regeneration temperature and desorption duration influence simulated heater-specific energy consumption and CO₂ productivity.
+Nine simulated combinations of regeneration temperature and desorption duration illustrate the energy–productivity trade-off. Connecting the sampled points does **not** establish a Pareto frontier.
 
-The selected operating point achieves a 2.31% reduction in heater SEC while maintaining approximately 90% of baseline productivity. The plotted operating conditions represent a discrete sensitivity study, not a globally optimised Pareto frontier.
+### Dynamic thermal response
 
+![Simulated TVSA bed temperature and heating/cooling equipment duty throughout the six-stage cycle](outputs/figures/tvsa_cycle_temperature.png)
 
-### Dynamic Thermal Model
+The simulated bed temperature deviates from the prescribed temperature trajectory as heat storage, sorption heat and finite equipment duties are introduced. Heating and cooling transients are **model predictions**, not experimentally validated equipment duties.
 
-![TVSA dynamic bed temperature and equipment duties](outputs/figures/tvsa_cycle_temperature.png)
+### MATLAB–Python reference-model comparison
 
-The dynamic thermal model incorporates a lumped bed energy balance, accounting for CO₂ and H₂O sorption heat, gas-flow sensible heat, and heating/cooling equipment duties.
+![CO2-loading and bed-temperature comparison between the Python reference-model reproduction and stored MATLAB results](outputs/figures/matlab_python_validation.png)
 
-Unlike the reference model, which uses a prescribed temperature response, the thermal extension calculates the bed temperature dynamically throughout the six-stage TVSA cycle.
+The prescribed-temperature Python baseline was compared with stored MATLAB reference outputs under three ambient conditions: **4°C/20% RH**, **20°C/50% RH**, and **40°C/90% RH**. The plotted CO₂-loading RMSEs were approximately **1.73–3.89 × 10⁻¹⁵ mol/kg**, and the bed-temperature RMSEs approximately **2.89–2.93 × 10⁻¹³ °C**. These results demonstrate numerical agreement with the reference datasets; they do **not** validate the separately developed thermal extension or establish experimental accuracy.
 
-The results demonstrate:
+Additional figures: [baseline cycle profiles](outputs/figures/figure2_python_reimplementation.png), [adsorption heat-balance transient](outputs/figures/adsorption_thermal_balance.png), [operating and ambient sensitivities](outputs/figures/tvsa_sensitivity_analysis.png), and [baseline versus selected-point SEC](outputs/figures/optimisation_comparison.png).
 
-- **Heating:** Transient bed temperature response during regeneration, including deviations from the prescribed temperature trajectory.
-- **Desorption:** Temperature regulation near 100°C through hysteresis-based heater control.
-- **Cooling:** Rapid temperature reduction following desorption, accompanied by a high initial cooling duty.
-- **Adsorption:** Gradual cooling towards ambient conditions.
+For additional numerical interpretation, see [Results and Interpretation](project_result.md).
 
-The model predicts the thermal response under simplified equipment and heat-transfer assumptions. The calculated peak duties have not been independently validated against experimental measurements.
+## Modelling methodology
 
+### Reduced-order TVSA cycle
 
-### MATLAB–Python Reference Model Comparison
+The reference framework represents six stages:
 
-![MATLAB–Python TVSA model comparison](outputs/figures/matlab_python_validation.png)
+**Vacuum → Heating → Desorption → Cooling → Pressurisation → Adsorption**
 
-The Python implementation of the published reduced-order TVSA model was compared against reference MATLAB outputs under three ambient conditions:
+It includes CO₂/H₂O adsorption equilibria, linear-driving-force kinetics, gas inventory/flow balances, and prescribed stage operating profiles. The six model states comprise fast/slow CO₂ loading, free/bound H₂O loading, gas-phase CO₂ mole fraction, and bed temperature. The reference baseline uses a prescribed temperature response; its model structure and parameters are attributed to the publication below.
 
-- **Cold and dry:** 4°C, 20% RH
-- **Moderate:** 20°C, 50% RH
-- **Hot and humid:** 40°C, 90% RH
+### Dynamic bed energy balance
 
-The comparison evaluates transient CO₂ loading and bed temperature throughout the six-stage TVSA cycle.
+The thermal extension evaluates bed temperature using a lumped energy balance:
 
-Across the three conditions, the comparison produced:
+$$
+C_{\mathrm{eff}}\frac{dT_{\mathrm{bed}}}{dt}
+=\dot Q_{\mathrm{heater}}+\dot Q_{\mathrm{sorption}}
++\dot Q_{\mathrm{gas}}-\dot Q_{\mathrm{cooler}}-\dot Q_{\mathrm{loss}}.
+$$
 
-| Variable | RMSE range |
+Here, $C_{\mathrm{eff}}$ is effective bed heat capacity (J/K), and each $\dot Q$ term is a heat-transfer rate (W), positive in the directions indicated by the equation. Sorption heat is calculated from the CO₂ and H₂O loading rates:
+
+$$
+\dot Q_{\mathrm{sorption}}=m_s\left(
+\Delta H_{\mathrm{CO_2}}\frac{dq_{\mathrm{CO_2}}}{dt}
++\Delta H_{\mathrm{H_2O}}\frac{dq_{\mathrm{H_2O}}}{dt}
+\right).
+$$
+
+The model includes conductance- and duty-limited heating/cooling with on/off hysteresis control. Temperature is updated using explicit timesteps. The current implementation sets hardware heat capacity and ambient heat-loss conductance to zero.
+
+### Performance metrics and optimisation
+
+Five consecutive thermal cycles are simulated, passing the final state into the next cycle. Performance is assessed on the fifth cycle; **periodic cyclic steady state has not been demonstrated**.
+
+$$
+P_{\mathrm{CO_2}}=\frac{m_{\mathrm{CO_2,captured}}}{t_{\mathrm{cycle}}},
+\qquad
+SEC_{\mathrm{heater}}=\frac{E_{\mathrm{heater}}}{m_{\mathrm{CO_2,captured}}}.
+$$
+
+COBYLA searches over **80–120°C** regeneration temperature and **14,000–26,000 s** desorption duration, using five starting points, subject to:
+
+$$
+P_{\mathrm{CO_2}}\geq0.90P_{\mathrm{baseline}}.
+$$
+
+This objective includes **heater thermal energy only**; vacuum/fan electricity and cooling utility energy are not included.
+
+### Main code modules
+
+| File | Purpose |
 |---|---|
-| CO₂ loading | 1.73–3.89 × 10⁻¹⁵ mol/kg |
-| Bed temperature | 2.89–2.93 × 10⁻¹³ °C |
+| `parameters.py`, `cycle_driver.py` | Process parameters and six-stage operating schedule |
+| `isotherms.py`, `kinetics.py`, `gas_balance.py` | Adsorption, kinetics and gas inventory calculations |
+| `simulator.py` | Python reproduction of the prescribed-temperature reference model |
+| `simulator_thermal.py`, `thermal.py` | Dynamic thermal model, heat balance and equipment control |
+| `optimisation.py` | Repeated-cycle performance evaluator |
+| `run_scipy.py` | Multi-start constrained optimisation |
 
-The near-identical trajectories demonstrate numerical agreement between the Python implementation and the stored MATLAB reference outputs.
+## Validation scope and limitations
 
-**Validation scope:** This comparison verifies consistency with the reference data. It does not independently validate the extended thermal model or establish agreement with experimental measurements.
+- **Reference-model comparison:** Numerical agreement is with the stored MATLAB reference CSVs. The provenance and redistribution permissions of reference materials should be confirmed independently. This is not experimental validation.
+- **Thermal assumptions:** One lumped bed temperature; no resolved spatial gradients, equipment thermal inertia or ambient heat losses. Predicted initial adsorption heat and peak cooling duties have not been independently validated.
+- **Numerical sensitivity:** The reported 2.31% improvement is at a 1-second timestep. The same candidate yields approximately **2.05%** at 5 seconds; a full timestep-convergence study has not been completed.
+- **Cycle and optimiser limitations:** Fifth-cycle performance does not establish cyclic steady state. COBYLA searches locally; the optimum lies very close to the productivity constraint, with a small solver feasibility tolerance.
+- **System boundaries:** Heater SEC excludes vacuum/fan electricity and cooling energy and should not be presented as a whole-plant energy reduction.
 
+Potential next steps include numerical/cyclic convergence studies, equipment heat-capacity and heat-loss modelling, more complete utility accounting, and independent thermal-model validation.
 
-**Key finding:** The optimised operating conditions achieved a **2.31% reduction in simulated heater SEC**, while satisfying the minimum productivity constraint at the reported precision.
+## Installation and reproducibility
 
-The results were reproduced using `run_scipy.py` and `check_timestep.py` with a 1-second simulation timestep.
+**Requirements:** Python 3.10 or later; packages are listed in [`requirements.txt`](requirements.txt). Dependency lower bounds are specified, but the exact environment has not been locked.
 
-**Limitations:** The solution is a local optimum under simplified thermal assumptions. Productivity is very close to the constraint boundary, numerical timestep convergence has not been demonstrated, and the reported SEC excludes vacuum, fan and cooling utility energy.
-
-Further discussion is provided in [Results and Interpretation](project_result.md).
-
-
-
-## Installation and Reproducibility
-
-### Requirements
-
-- Python 3.10 or later
-- NumPy
-- SciPy
-- Pandas
-- Matplotlib
-
-The required Python packages are listed in `requirements.txt`.
-
-### 1. Clone the Repository
+Clone the repository:
 
 ```bash
 git clone https://github.com/uhrenhwan/direct-air-capture-modelling.git
 cd direct-air-capture-modelling
 ```
 
-### 2. Set Up the Python Environment
-
-On Windows (PowerShell):
+Create a virtual environment and install the dependencies on **Windows PowerShell**:
 
 ```powershell
 py -3 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-On macOS/Linux:
+On macOS/Linux, use `python3 -m venv .venv` and `.venv/bin/python -m pip install -r requirements.txt` instead.
 
-```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-```
-
-The commands below use the Windows virtual-environment Python executable. On macOS/Linux, replace it with `.venv/bin/python`.
-
-### 3. Run the Simulations
-
-**Reduced-order reference TVSA model:**
+Run the main simulations and checks (Windows commands shown):
 
 ```powershell
 .\.venv\Scripts\python.exe run_baseline.py
-```
-
-**Dynamic thermal model:**
-
-```powershell
 .\.venv\Scripts\python.exe run_cyclic_thermal.py
-```
-
-**Constrained process optimisation:**
-
-```powershell
 .\.venv\Scripts\python.exe run_scipy.py
-```
-
-The optimisation uses SciPy COBYLA to minimise simulated heater-specific energy consumption while maintaining at least 90% of baseline CO₂ productivity.
-
-The reported optimisation was performed using a 1-second simulation timestep.
-
-### 4. Reproduce the Engineering Figures
-
-Run the following scripts individually:
-
-| Script | Output |
-|---|---|
-| `plot_optimisation.py` | Baseline vs optimised heater SEC |
-| `run_baseline.py` | Reduced-order TVSA cycle dynamics |
-| `run_thermal.py` | Adsorption thermal energy balance |
-| `plot_cycle_temperature.py` | Dynamic bed temperature and equipment duties |
-| `plot_tradeoff.py` | Energy–productivity trade-off |
-| `plot_sensitivities.py` | Operating and ambient sensitivity analysis |
-| `plot_model_validation.py` | MATLAB–Python reference model comparison |
-
-For example:
-
-```powershell
-.\.venv\Scripts\python.exe plot_tradeoff.py
-```
-
-Generated figures are saved in `outputs/figures/`. Supporting numerical results are saved in `outputs/data/`.
-
-Some plotting scripts perform multiple five-cycle simulations and may require substantial computation time.
-
-### 5. Verify the Results
-
-To verify the recorded optimisation candidate:
-
-```powershell
 .\.venv\Scripts\python.exe check_timestep.py
-```
-
-To regenerate the reference-model outputs and compare them with the stored MATLAB reference data:
-
-```powershell
-.\.venv\Scripts\python.exe run_baseline.py
 .\.venv\Scripts\python.exe validate_matlab_parity.py
 ```
 
-These checks evaluate numerical consistency, not experimental accuracy.
+To regenerate the figures, run the relevant scripts after installation:
 
-### Reproducibility Notes
-
-- The reported optimisation results use a 1-second timestep.
-- The model evaluates performance after five consecutive TVSA cycles.
-- Numerical timestep convergence and cyclic steady-state convergence have not been fully established.
-- The optimisation is a local constrained search; global optimality is not guaranteed.
-- Dependency minimum versions are specified in `requirements.txt`, but an exact environment lockfile has not yet been established.
-
-
-## Modelling Methodology
-
-### 1. Reduced-Order TVSA Process Model
-
-The process is represented by a six-stage temperature-vacuum swing adsorption (TVSA) cycle:
-
-**Vacuum → Heating → Desorption → Cooling → Pressurisation → Adsorption**
-
-The Python implementation reproduces the published reduced-order adsorption framework, including:
-
-- CO₂ and H₂O adsorption equilibrium relationships.
-- Linear driving force (LDF) adsorption/desorption kinetics.
-- Fast and slow CO₂ adsorption states and free/bound H₂O loading states.
-- Gas-phase CO₂ inventory and flow balances.
-- Prescribed pressure, humidity and temperature trajectories.
-
-The model tracks six state variables: four sorbent loading states, gas-phase CO₂ mole fraction and bed temperature.
-
-The reference implementation uses a prescribed temperature response, providing a basis for comparison with the subsequent thermal extension.
-
-### 2. Dynamic Thermal Model
-
-The model was extended by replacing the prescribed bed temperature response with a lumped dynamic energy balance:
-
-$$
-C_{\mathrm{eff}}\frac{dT_{\mathrm{bed}}}{dt}
-=
-\dot Q_{\mathrm{heater}}
-+
-\dot Q_{\mathrm{sorption}}
-+
-\dot Q_{\mathrm{gas}}
--
-\dot Q_{\mathrm{cooler}}
--
-\dot Q_{\mathrm{loss}}
-$$
-
-where:
-
-- $C_{\mathrm{eff}}$: effective bed heat capacity [J/K]
-- $\dot Q_{\mathrm{heater}}$: heater input [W]
-- $\dot Q_{\mathrm{sorption}}$: heat released or absorbed during CO₂/H₂O sorption [W]
-- $\dot Q_{\mathrm{gas}}$: sensible heat transfer associated with inlet gas [W]
-- $\dot Q_{\mathrm{cooler}}$: cooling duty [W]
-- $\dot Q_{\mathrm{loss}}$: heat loss to surroundings [W]
-
-Sorption heat is calculated from the simulated loading rates:
-
-$$
-\dot Q_{\mathrm{sorption}}
-=
-m_s\left(
-\Delta H_{\mathrm{CO_2}}\frac{dq_{\mathrm{CO_2}}}{dt}
-+
-\Delta H_{\mathrm{H_2O}}\frac{dq_{\mathrm{H_2O}}}{dt}
-\right)
-$$
-
-Heating and cooling duties are constrained by equipment heat-transfer conductances and maximum thermal capacities. On/off hysteresis controllers regulate the bed temperature during the relevant operating stages.
-
-The thermal balance is integrated through explicit timestep updates. The current implementation assumes zero hardware heat capacity and zero ambient heat-loss conductance.
-
-### 3. Cycle Simulation and Performance Evaluation
-
-Five consecutive TVSA cycles are simulated, transferring the final bed state of each cycle to the next.
-
-Performance is evaluated using the fifth cycle. This is a fixed evaluation procedure rather than a demonstrated cyclic steady state.
-
-CO₂ productivity is calculated as:
-
-$$
-P_{\mathrm{CO_2}}=
-\frac{m_{\mathrm{CO_2,captured}}}{t_{\mathrm{cycle}}}
-$$
-
-Heater-specific energy consumption is calculated as:
-
-$$
-SEC_{\mathrm{heater}}=
-\frac{E_{\mathrm{heater}}}{m_{\mathrm{CO_2,captured}}}
-$$
-
-The reported SEC represents heater thermal energy only. It excludes vacuum/fan electricity and cooling utility energy.
-
-### 4. Constrained Process Optimisation
-
-SciPy COBYLA was used to minimise simulated heater SEC by varying:
-
-- Regeneration temperature
-- Desorption duration
-
-The optimisation was subject to:
-
-$$
-P_{\mathrm{CO_2}}\geq0.90P_{\mathrm{baseline}}
-$$
-
-Five initial guesses were used to explore candidate operating conditions. The reported solution is a local optimum within the model's specified assumptions and operating bounds.
-
-### 5. Code Organisation
-
-| Module | Responsibility |
+| Script | Output |
 |---|---|
-| `parameters.py` | Process, sorbent and equipment parameters |
-| `cycle_driver.py` | Six-stage operating schedule |
-| `isotherms.py`, `kinetics.py` | Adsorption equilibrium and kinetics |
-| `gas_balance.py` | Gas-phase inventory and flow calculations |
-| `simulator.py` | Python reproduction of the reference model |
-| `simulator_thermal.py` | Extended dynamic thermal simulation |
-| `thermal.py` | Energy balance and equipment controllers |
-| `optimisation.py` | Performance evaluation |
-| `run_scipy.py` | Constrained numerical optimisation |
+| `plot_optimisation.py` | Baseline versus selected-point heater SEC |
+| `run_baseline.py` | Reference-model cycle profiles and CSVs |
+| `run_thermal.py` | Adsorption heat-balance transient |
+| `plot_cycle_temperature.py` | Dynamic bed temperature and equipment duty |
+| `plot_tradeoff.py` | Heater SEC versus productivity |
+| `plot_sensitivities.py` | Operating and ambient sensitivity panels |
+| `plot_model_validation.py` | MATLAB–Python overlays and error metrics (run `run_baseline.py` first) |
 
-For a detailed explanation of the implementation, see the corresponding source files.
+Figures are written to `outputs/figures/`; numerical outputs are written to `outputs/data/`. Some scripts perform many five-cycle simulations and may take substantially longer than a single model run.
 
+## Attribution and reference data
 
-## Baseline example
+The reference adsorption framework, parameters and baseline protocol are attributed to:
 
-![Baseline cycle profiles for cold/dry, moderate and hot/humid air](outputs/figures/figure2_python_reimplementation.png)
+An, K., Wald, D., Chen, K. & King, R. (2026). *Cycle-resolved dynamic modeling of atmospheric CO2 separation systems under time-varying ambient and electricity conditions*. **Frontiers in Environmental Engineering**, 5, 1881554. https://doi.org/10.3389/fenve.2026.1881554
 
-The reference run shows sorbent loadings, bed temperature, humidity and pressure through each stage. This figure uses the prescribed-temperature baseline.
-
-
-## Model Assumptions and Limitations
-
-The model is intended for preliminary process analysis and operating-condition optimisation rather than detailed equipment design.
-
-### Thermal Modelling Assumptions
-
-- **Lumped thermal model:** The bed is represented by a single temperature state, without resolving spatial temperature gradients.
-- **Adiabatic assumption:** Heat loss to the surroundings is neglected (UA = 0).
-- **Equipment thermal inertia:** Hardware heat capacity is assumed to be zero.
-- **Simplified equipment representation:** Heater and cooler performance is represented using heat-transfer conductances, maximum duties and hysteresis-based control.
-
-These assumptions reduce computational complexity but may influence predicted temperature transients and equipment duties.
-
-### Numerical Limitations
-
-- The optimisation results were evaluated using a 1-second simulation timestep.
-- Timestep sensitivity was investigated, but numerical convergence has not been fully established.
-- Five consecutive cycles are simulated, with performance evaluated using the fifth cycle. Periodic cyclic steady state is not explicitly verified.
-- The predicted initial adsorption heat spike and peak cooling duty have not been independently validated.
-
-### Optimisation Limitations
-
-- SciPy COBYLA performs a local constrained optimisation; global optimality is not established.
-- The reported 2.31% reduction in heater SEC is accompanied by an approximately 10% reduction in CO₂ productivity.
-- The optimised operating point lies very close to the minimum productivity constraint.
-- The objective considers heater thermal energy only. Vacuum electricity, fan electricity and cooling utility energy are excluded.
-
-Consequently, the reported SEC reduction should not be interpreted as an equivalent reduction in total plant energy consumption.
-
-### Validation Scope
-
-The Python implementation of the reference TVSA model was compared against stored MATLAB reference outputs across three ambient conditions.
-
-This demonstrates numerical agreement with the reference dataset but does not independently establish experimental accuracy.
-
-The extended dynamic thermal model has not been validated against experimental DAC operating data.
-
-### Future Improvements
-
-Potential improvements include:
-
-- Incorporating equipment thermal inertia and ambient heat losses.
-- Performing numerical timestep and cyclic steady-state convergence studies.
-- Extending energy accounting to vacuum, fan and cooling utilities.
-- Validating predicted temperature profiles and equipment duties against experimental or independently established reference data.
-
-
-## Data and source material
-
-- `validation_reference/`: MATLAB CSV exports used for regression tests; retain these in GitHub.
-- `outputs/figures/`: example baseline comparison figure.
-- `outputs/data/summary_metrics.csv`: compact baseline results. Large regenerated time-series CSVs are ignored by Git.
-- Root sensitivity CSVs: recorded study outputs; rerunning a sweep overwrites the corresponding file.
-- `reference_matlab/`: upstream MATLAB source.
-
-## Development checks
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-.\.venv\Scripts\python.exe -m ruff check .
-.\.venv\Scripts\python.exe -m black --check .
-.\.venv\Scripts\python.exe -m pytest -q
-```
-
-GitHub Actions runs these checks on pushes and pull requests.
-
-## Attribution
-
-The reference adsorption framework, parameters and Figure 2 protocol come from:
-
-An, K., Wald, D., Chen, K. & King, R. (2026). *Cycle-resolved dynamic modeling of atmospheric CO2 separation systems under time-varying ambient and electricity conditions*. Frontiers in Environmental Engineering 5:1881554. https://doi.org/10.3389/fenve.2026.1881554
-
-The Python translation and subsequent thermal/optimisation work are described separately above. The upstream MATLAB files retain their original content and attribution. Their redistribution remains subject to the upstream licence or permission.
+The Python reproduction is distinguished from the subsequent thermal modelling and optimisation work. The `validation_reference/` directory contains reference CSVs used for numerical comparison. Any third-party source code or data should only be redistributed where the applicable licence or permission allows it.

@@ -1,30 +1,58 @@
-# Thermal model and optimisation results
+# Thermal model and optimisation — results and interpretation
 
-The study minimises heater specific energy consumption (SEC) while maintaining at least 90% of the reference CO2 productivity. SciPy COBYLA searches over regeneration temperature (80-120 C) and desorption duration (14,000-26,000 s), using five starting points.
+This study uses a Python dynamic thermal extension of a reduced-order TVSA model to investigate **heater-specific energy consumption (SEC)** and CO₂ productivity. The objective is to minimise simulated heater SEC while maintaining at least **90% of baseline CO₂ productivity**.
 
-Each evaluation runs five consecutive thermal cycles at 20 C and 50% relative humidity, passing the final state into the next cycle. Metrics use the fifth cycle. The optimisation and sensitivity scripts use a 1 s time step.
+## Optimisation setup
 
-## Recorded optimisation result
+- **Method:** SciPy COBYLA, five starting points; local constrained search.
+- **Variables:** Regeneration temperature (80–120°C) and desorption duration (14,000–26,000 s).
+- **Ambient conditions:** 20°C and 50% relative humidity.
+- **Numerical evaluation:** Five consecutive thermal cycles; fifth-cycle metrics; 1-second simulation timestep.
+- **Objective boundary:** Heater thermal energy only; vacuum/fan electricity and cooling utility energy are excluded.
 
-| Quantity | Baseline | Candidate |
-| --- | ---: | ---: |
-| Regeneration temperature [C] | 100 | approximately 95 |
-| Desorption duration [s] | 20,000 | approximately 23,077 |
-| CO2 productivity [kg/h] | 6.354 | 5.718 |
-| Heater SEC [kWh thermal/kg CO2] | 1.995 | 1.949 |
+## Reproduced operating-point comparison
 
-The recorded SEC reduction is 2.31%. Lower regeneration temperature and longer desorption reduced heater energy per captured mass, with a productivity penalty close to the constraint boundary. These values come from the earlier project study; the full solver log and exact dependency versions were not archived. Re-run `run_scipy.py` to establish results for the current code and environment.
+The selected solution was rerun with `run_scipy.py` and checked with `check_timestep.py` in the user's Python environment.
 
-## Thermal extension
+| Metric | Baseline | Selected operating point |
+|---|---:|---:|
+| Regeneration temperature | 100°C | 95°C |
+| Desorption duration | 20,000 s | 23,076.65 s |
+| CO₂ productivity | 6.3535 kg/h | 5.7183 kg/h |
+| Heater SEC | 1.9951 kWh_th/kg CO₂ | 1.9490 kWh_th/kg CO₂ |
 
-The bed temperature follows a lumped energy balance including sorbent/gas heat capacity, CO2 and water sorption heat, capacity-limited heating and cooling, hysteresis control, and sensible heat transfer during adsorption. `equipment_sizing.py` provides preliminary sensible-only sizing estimates, rather than a detailed exchanger design.
+**Result:** The simulated heater SEC falls by approximately **2.31%** at a 1-second timestep, accompanied by approximately **10% lower productivity**. The minimum-productivity threshold is approximately **5.7182 kg/h**, so the selected point is feasible at the printed precision but lies very close to the constraint boundary. The optimiser uses a small numerical feasibility tolerance; global optimality is not established.
 
-## Sensitivity studies
+## Timestep check
 
-`ambient_sensitivity.py` evaluates 15, 20 and 25 C at 30%, 50% and 70% RH using the candidate operating point. `operating_sensitivity.py` evaluates nearby regeneration temperatures and desorption durations. The checked-in CSVs contain the recorded outputs.
+The same operating point was evaluated with `check_timestep.py`:
 
-The ambient study suggests a strong humidity effect on heater SEC and a temperature effect on productivity within the sampled range. The operating study illustrates that the lowest SEC and largest productivity margin need not occur at the same point. These observations describe the sampled model outputs, rather than general DAC performance laws.
+| Timestep | Baseline SEC | Selected-point SEC | Calculated reduction | Meets 90% productivity threshold? |
+|---|---:|---:|---:|---|
+| 5 s | 1.9992 | 1.9582 | 2.05% | Yes |
+| 1 s | 1.9951 | 1.9490 | 2.31% | Yes, near boundary |
 
-## Interpretation limits
+The predictions vary with timestep. These checks **do not establish numerical convergence**; the 2.31% result should be reported specifically as the 1-second model result.
 
-Heater SEC excludes auxiliary electricity and cooling utility energy. The model has simplified thermal equipment and currently assumes no hardware heat capacity or ambient heat loss. Five cycles do not establish periodic convergence. The search identifies a candidate local solution; it does not establish a global optimum. MATLAB numerical agreement was checked for the separate prescribed-temperature baseline, not this thermal extension.
+## Thermal extension and sensitivity studies
+
+The thermal extension replaces the reference model's prescribed bed-temperature response with a lumped energy balance. It includes sorbent/void-gas heat capacity, CO₂/H₂O sorption heat, gas-flow sensible heat, finite heater/cooler conductances and duties, and hysteresis-based control. `equipment_sizing.py` provides preliminary sensible-heat duty estimates, not detailed exchanger designs.
+
+The operating and ambient sweeps are generated by `plot_tradeoff.py` and `plot_sensitivities.py`. Across the sampled conditions, the model predicts sensitivity to regeneration temperature, desorption time, ambient temperature and particularly humidity. These are **sampled model responses**, not experimentally established performance laws or a global Pareto frontier.
+
+## Interpretation and validation boundaries
+
+- The reference-model Python reproduction was compared with stored MATLAB reference CSVs under three ambient conditions. This is a **numerical consistency check**, not experimental validation of the thermal extension.
+- Five thermal cycles are simulated, but periodic cyclic steady state is not explicitly verified.
+- The model assumes a lumped bed temperature, zero hardware heat capacity and zero ambient heat-loss conductance. Predicted adsorption heat spikes and equipment duty peaks are not independently validated.
+- Heater SEC excludes vacuum/fan electricity and cooling utility energy; the 2.31% reduction is **not** a measured or whole-plant energy saving.
+- The exact package environment has not been locked, and reference-data provenance or redistribution permissions should be verified before wider reuse.
+
+To regenerate the selected point and its timestep check:
+
+```powershell
+py run_scipy.py
+py check_timestep.py
+```
+
+See [README](README.md) for installation instructions, figures and a guide to the main model modules.
